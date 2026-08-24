@@ -1,0 +1,106 @@
+/* ============================================================
+   ROSTER — Design tokens
+   Subject: volunteer / event-crew operations (badges, headsets,
+   clipboards, call sheets). Signature element: the "lanyard badge"
+   card, used on the login screen and volunteer profile.
+   ============================================================ */
+
+:root{
+  color-scheme: light;
+
+  /* --- pastel palette (light) --- */
+  --bg:            #FAF6EF;   /* soft paper */
+  --bg-elevated:   #FFFFFF;
+  --surface:       #FFFFFF;
+  --surface-muted: #F1EBDF;
+  --border:        #E4DCCB;
+
+  --ink:           #33312C;   /* primary text */
+  --ink-soft:      #6E6A5F;   /* secondary text */
+  --ink-faint:     #A39C8B;
+
+  --sage:          #A9C7A1;   /* primary */
+  --sage-ink:      #33512F;
+  --lavender:      #C9BCE0;   /* secondary */
+  --lavender-ink:  #453A66;
+  --apricot:       #F3C6A0;   /* accent */
+  --apricot-ink:   #6B3E12;
+  --sky:           #A9CBDE;   /* info */
+  --sky-ink:       #204255;
+  --blush:         #EBB9BE;   /* danger/alert */
+  --blush-ink:     #6E2530;
+
+  --focus-ring:    #7C9E74;
+
+  --shadow-sm: 0 1px 2px rgba(51,49,44,0.06), 0 1px 1px rgba(51,49,44,0.04);
+  --shadow-md: 0 6px 20px rgba(51,49,44,0.08), 0 2px 6px rgba(51,49,44,0.06);
+  --shadow-lg: 0 20px 45px rgba(51,49,44,0.16);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Dark theme — same pastel hues, deepened surfaces so accents still read soft */
+:root[data-theme="dark"], @media (prefers-color-scheme: dark){
+  color-scheme: dark;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:            #23241F;
+  --bg-elevated:   #2B2C26;
+  --surface:       #2B2C26;
+  --surface-muted: #34352D;
+  --border:        #454537;
+
+  --ink:           #F1ECE0;
+  --ink-soft:      #C7C0AC;
+  --ink-faint:     #8B856F;
+
+  --sage:          #8FB187;
+  --sage-ink:      #DCEBD7;
+  --lavender:      #B6A6D6;
+  --lavender-ink:  #EAE2F7;
+  --apricot:       #E4B385;
+  --apricot-ink:   #FBE9D5;
+  --sky:           #8FB6CC;
+  --sky-ink:       #E1EFF6;
+  --blush:         #D69AA0;
+  --blush-ink:     #FBE3E5;
+
+  --focus-ring:    #A9C7A1;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.35);
+  --shadow-lg: 0 20px 45px rgba(0,0,0,0.5);
+}
+
+/* System-default theme (no explicit toggle chosen yet) */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:            #23241F;
+    --bg-elevated:   #2B2C26;
+    --surface:       #2B2C26;
+    --surface-muted: #34352D;
+    --border:        #454537;
+    --ink:           #F1ECE0;
+    --ink-soft:      #C7C0AC;
+    --ink-faint:     #8B856F;
+    --sage:          #8FB187;
+    --sage-ink:      #DCEBD7;
+    --lavender:      #B6A6D6;
+    --lavender-ink:  #EAE2F7;
+    --apricot:       #E4B385;
+    --apricot-ink:   #FBE9D5;
+    --sky:           #8FB6CC;
+    --sky-ink:       #E1EFF6;
+    --blush:         #D69AA0;
+    --blush-ink:     #FBE3E5;
+    --focus-ring:    #A9C7A1;
+  }
+}

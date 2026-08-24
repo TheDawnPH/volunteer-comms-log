@@ -1,0 +1,17 @@
+name = "volunteer-uploads"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# R2 bucket binding — create the bucket first with:
+#   wrangler r2 bucket create volunteer-system-files
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "volunteer-system-files"
+
+# Secrets (do NOT put these here — use `wrangler secret put NAME`):
+#   SUPABASE_URL
+#   SUPABASE_ANON_KEY
+#   SUPABASE_SERVICE_ROLE_KEY
+# Optional plain var if you attach a custom/public domain to the bucket:
+# [vars]
+# R2_PUBLIC_BASE_URL = "https://cdn.yourdomain.com"

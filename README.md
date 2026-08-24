@@ -78,9 +78,9 @@ npx wrangler login
 npx wrangler r2 bucket create volunteer-system-files
 
 # Store secrets (never committed, never sent to the browser)
-npx wrangler secret put SUPABASE_URL
-npx wrangler secret put SUPABASE_ANON_KEY
-npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
+echo "<insert your supabase url>" | npx wrangler secret put SUPABASE_URL
+echo "<insert your supabase anon key>" | npx wrangler secret put SUPABASE_ANON_KEY
+echo "<insert your supabase service role key>" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
 
 # Deploy
 npm run deploy

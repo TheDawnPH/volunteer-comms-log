@@ -72,18 +72,15 @@ volunteer-system/
 ```bash
 cd worker
 npm install
-wrangler login
+npx wrangler login
 
 # Create the bucket referenced in wrangler.toml
-wrangler r2 bucket create volunteer-system-files
+npx wrangler r2 bucket create volunteer-system-files
 
 # Store secrets (never committed, never sent to the browser)
-wrangler secret put SUPABASE_URL
-wrangler secret put SUPABASE_ANON_KEY
-wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
-
-# Local dev
-npm run dev
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_ANON_KEY
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
 
 # Deploy
 npm run deploy

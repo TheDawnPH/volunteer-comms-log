@@ -38,7 +38,7 @@ export default function Shell({ children }) {
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <span className="dot" />
-          <h1>Roster</h1>
+          <h1>MAT Volunteer System</h1>
         </div>
         {nav.map((item, i) =>
           item.section ? (

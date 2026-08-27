@@ -6,11 +6,11 @@
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^4.125.0"
+    "wrangler": "^3.78.0"
   },
   "allowScripts": {
+    "esbuild@0.17.19": true,
     "sharp@0.33.5": true,
-    "esbuild@0.28.1": true,
-    "workerd@1.20260820.1": true
+    "workerd@1.20250718.0": true
   }
 }

@@ -72,19 +72,29 @@ volunteer-system/
 ```bash
 cd worker
 npm install
-npx wrangler login
+wrangler login
 
 # Create the bucket referenced in wrangler.toml
-npx wrangler r2 bucket create volunteer-system-files
+wrangler r2 bucket create volunteer-system-files
 
 # Store secrets (never committed, never sent to the browser)
-echo "<insert your supabase url>" | npx wrangler secret put SUPABASE_URL
-echo "<insert your supabase anon key>" | npx wrangler secret put SUPABASE_ANON_KEY
-echo "<insert your supabase service role key>" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
+wrangler secret put SUPABASE_URL
+wrangler secret put SUPABASE_ANON_KEY
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY   # Project Settings → API → service_role
+
+# Local dev
+npm run dev
 
 # Deploy
 npm run deploy
 ```
+
+**Required — set `PUBLIC_APP_URL`:** open `worker/wrangler.toml` and set
+`[vars] PUBLIC_APP_URL` to your deployed frontend's origin (step 5
+below), e.g. `https://roster.pages.dev`. This is what points a new
+user's "set your PIN" email at `/reset-pin` instead of Supabase's
+default Site URL — without it, new users end up silently signed in
+without ever setting a real PIN. Redeploy the Worker after changing it.
 
 After deploying, Wrangler prints your Worker URL, e.g.
 `https://volunteer-uploads.<your-subdomain>.workers.dev`. You'll put

@@ -10,16 +10,15 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "html5-qrcode": "^2.3.8",
+    "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
-    "qrcode.react": "^3.1.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.6"
-  },
-  "allowScripts": {
-    "esbuild@0.21.5": true
   }
 }

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import React, { useEffect, useRef, useState } from 'react'
+import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabaseClient.js'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
@@ -12,6 +12,7 @@ export default function CommsEquipment() {
   const [showingQr, setShowingQr] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const qrCanvasRef = useRef(null)
 
   useEffect(() => { load() }, [])
 
@@ -40,10 +41,20 @@ export default function CommsEquipment() {
     load()
   }
 
+  function downloadQr(equipment) {
+    const canvas = qrCanvasRef.current?.querySelector('canvas')
+    if (!canvas) return
+    const link = document.createElement('a')
+    const safeName = (equipment.name || 'headset').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    link.download = `qr-${safeName}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
+
   return (
     <div>
       <h2>Comms Equipment List</h2>
-      <p style={{ marginBottom: 20 }}>Each headset gets a unique QR code volunteers scan to time in/out.</p>
+      <p style={{ marginBottom: 20 }}>Each headset gets a unique QR code volunteers scan (with their phone camera) to time in/out.</p>
 
       <DataTable
         title="Headsets"
@@ -75,18 +86,25 @@ export default function CommsEquipment() {
             <div className="field"><label>Equipment name</label>
               <input value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} required /></div>
             <div className="field"><label>QR code value</label>
-              <input value={editing.qr_value} onChange={e => setEditing({ ...editing, qr_value: e.target.value })} placeholder="e.g. HEADSET-04" required /></div>
+              <input value={editing.qr_value} onChange={e => setEditing({ ...editing, qr_value: e.target.value })} placeholder="e.g. HEADSET-04" required />
+              <p className="hint-text">Keep this short — it's what gets encoded into the QR code, and what a volunteer can type by hand if the camera scanner isn't available (the headset's name also works as a fallback).</p>
+            </div>
           </form>
         </Modal>
       )}
 
       {showingQr && (
-        <Modal title={`QR code — ${showingQr.name}`} onClose={() => setShowingQr(null)}>
+        <Modal title={`QR code — ${showingQr.name}`} onClose={() => setShowingQr(null)}
+          footer={<>
+            <button className="btn btn-secondary" onClick={() => setShowingQr(null)}>Close</button>
+            <button className="btn btn-primary" onClick={() => downloadQr(showingQr)}>Download PNG</button>
+          </>}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ background: '#fff', display: 'inline-block', padding: 16, borderRadius: 12 }}>
-              <QRCodeSVG value={showingQr.qr_value} size={200} />
+            <div ref={qrCanvasRef} style={{ background: '#fff', display: 'inline-block', padding: 16, borderRadius: 12 }}>
+              {/* size + margin tuned for reliable phone-camera scanning when printed */}
+              <QRCodeCanvas value={showingQr.qr_value} size={240} level="M" includeMargin marginSize={2} />
             </div>
-            <p className="hint-text" style={{ marginTop: 12 }}>Print and attach to the physical headset.</p>
+            <p className="hint-text" style={{ marginTop: 12 }}>Download and print — attach to the physical headset. Also scannable straight off this screen.</p>
           </div>
         </Modal>
       )}

@@ -10,6 +10,14 @@
 
 create extension if not exists "pgcrypto";
 
+-- Pin the database session timezone to Asia/Manila (UTC+8, no DST).
+-- `timestamptz` columns always store true UTC instants regardless of
+-- this setting, but it keeps `now()` and any un-annotated display in
+-- the SQL editor / logs consistent with the app's locked timezone.
+-- (Run as the project owner; on some Supabase plans you may need to
+-- set this per-role instead of per-database — see README.)
+alter database postgres set timezone to 'Asia/Manila';
+
 -- ---------- profiles ----------
 -- One row per auth.users row. `login_code` is the badge number /
 -- nickname volunteers type on the PIN login screen; the PIN itself
@@ -49,9 +57,13 @@ create table if not exists public.schedules (
   start_time    timestamptz not null,
   end_time      timestamptz not null,
   call_time     timestamptz,
+  image_url     text,
   created_by    uuid references public.profiles(id),
   created_at    timestamptz not null default now()
 );
+
+-- Upgrading an existing database that predates the image_url column:
+alter table public.schedules add column if not exists image_url text;
 
 -- volunteers assigned to a schedule, each with a position
 create table if not exists public.schedule_volunteers (
@@ -86,6 +98,17 @@ create table if not exists public.comms_logs (
   created_at    timestamptz not null default now()
 );
 
+-- ---------- app settings (branding) ----------
+-- Single-row-per-key store for the app icon/logo and any other
+-- admin-editable branding, so it can be replaced without a redeploy.
+create table if not exists public.app_settings (
+  key         text primary key,
+  value       text,
+  updated_at  timestamptz not null default now()
+);
+insert into public.app_settings (key, value) values ('logo_url', null), ('app_name', 'Roster')
+  on conflict (key) do nothing;
+
 -- ============================================================
 -- resolve_login_code — turns a badge number / nickname into the
 -- hidden email address Supabase Auth needs for signInWithPassword.
@@ -98,10 +121,30 @@ language sql
 security definer
 set search_path = public
 as $$
-  select email from public.profiles where login_code = code limit 1;
+  -- Usernames are always stored lower-case; normalize the lookup too
+  -- so login is case-insensitive regardless of what the volunteer types.
+  select email from public.profiles where login_code = lower(trim(code)) limit 1;
 $$;
 
 grant execute on function public.resolve_login_code(text) to anon, authenticated;
+
+-- Usernames (login_code) are always stored lower-case. Enforce it at
+-- the database level too, so it holds even for rows written outside
+-- the app (SQL editor, migrations, etc).
+create or replace function public.lowercase_login_code()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.login_code := lower(trim(new.login_code));
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_lowercase_login_code on public.profiles;
+create trigger profiles_lowercase_login_code
+  before insert or update on public.profiles
+  for each row execute function public.lowercase_login_code();
 
 -- Auto-create a profile row whenever a new auth user is created via
 -- the admin "Add Volunteer" / "Add Staff/Admin" flow (see worker or

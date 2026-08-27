@@ -35,8 +35,8 @@ export default function Login() {
       <div className="badge-card">
         <div className="badge-strap" />
         <span className="badge-role-pill">{mode === 'admin' ? 'Administrator' : 'Volunteer'}</span>
-        <h2 style={{ marginBottom: 4 }}>MAT Volunteer System</h2>
-        <p style={{ marginBottom: 20 }}>Sign in with your badge number and PIN.</p>
+        <h2 style={{ marginBottom: 4 }}>Roster</h2>
+        <p style={{ marginBottom: 20 }}>Sign in with your username and PIN.</p>
 
         <div className="theme-toggle" style={{ display: 'inline-flex', marginBottom: 20 }}>
           <button className={mode === 'volunteer' ? 'active' : ''} onClick={() => setMode('volunteer')} type="button">Volunteer</button>
@@ -47,8 +47,8 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="loginCode">Badge number / nickname</label>
-            <input id="loginCode" value={loginCode} onChange={e => setLoginCode(e.target.value)} required autoFocus />
+            <label htmlFor="loginCode">Username</label>
+            <input id="loginCode" value={loginCode} onChange={e => setLoginCode(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" spellCheck={false} required autoFocus />
           </div>
           <div className="field">
             <label htmlFor="pin">PIN</label>

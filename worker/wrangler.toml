@@ -12,6 +12,11 @@ bucket_name = "volunteer-system-files"
 #   SUPABASE_URL
 #   SUPABASE_ANON_KEY
 #   SUPABASE_SERVICE_ROLE_KEY
-# Optional plain var if you attach a custom/public domain to the bucket:
-# [vars]
+# Plain vars (not secret — safe to commit):
+#   PUBLIC_APP_URL is REQUIRED so invite/reset emails redirect to
+#   /reset-pin instead of Supabase's default Site URL (see index.js).
+#   R2_PUBLIC_BASE_URL is optional, only if you attach a custom/public
+#   domain to the bucket.
+[vars]
+PUBLIC_APP_URL = "https://YOUR-DEPLOYED-FRONTEND.example.com"
 # R2_PUBLIC_BASE_URL = "https://cdn.yourdomain.com"

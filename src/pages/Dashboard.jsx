@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import Modal from '../components/Modal.jsx'
+import { isBirthdayWeek, isBirthdayToday } from '../lib/timezone.js'
 
 const tileStyles = [
   { bg: 'var(--sage)', fg: 'var(--sage-ink)' },
@@ -22,15 +24,41 @@ const adminTiles = [
   { to: '/admins', icon: '🛡️', title: 'Administrator Management', desc: 'Staff, comms gear, and attendance.' }
 ]
 
+const BIRTHDAY_POPUP_SEEN_KEY = 'roster-birthday-popup-seen'
+
 export default function Dashboard() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const tiles = profile?.role === 'admin' ? adminTiles : volunteerTiles
+  const [showBirthdayPopup, setShowBirthdayPopup] = useState(false)
+
+  const birthdayWeek = isBirthdayWeek(profile?.date_of_birth)
+  const birthdayToday = isBirthdayToday(profile?.date_of_birth)
+  const firstName = profile?.nickname || profile?.full_name?.split(' ')[0] || 'crew member'
+
+  useEffect(() => {
+    if (!birthdayWeek || !profile?.id) return
+    // Show the full popout once per birthday week per device, so it
+    // doesn't nag on every single page visit.
+    const seenKey = `${BIRTHDAY_POPUP_SEEN_KEY}:${profile.id}`
+    const alreadySeen = sessionStorage.getItem(seenKey)
+    if (!alreadySeen) {
+      setShowBirthdayPopup(true)
+      sessionStorage.setItem(seenKey, '1')
+    }
+  }, [birthdayWeek, profile?.id])
 
   return (
     <div>
-      <h2>Welcome back, {profile?.nickname || profile?.full_name?.split(' ')[0] || 'crew member'} 👋</h2>
-      <p style={{ marginBottom: 24 }}>Here's what's available to you today.</p>
+      <h2>Welcome back, {firstName} 👋</h2>
+      <p style={{ marginBottom: birthdayWeek ? 12 : 24 }}>Here's what's available to you today.</p>
+
+      {birthdayWeek && (
+        <div className="card card-pad birthday-banner" style={{ marginBottom: 24 }}>
+          🎉 <strong>Happy {birthdayToday ? 'Birthday' : 'Birthday Week'}, {firstName}!</strong> Wishing you a great one — from the Media and Technology Department. 🎂
+        </div>
+      )}
+
       <div className="tile-grid">
         {tiles.map((t, i) => (
           <div className="tile" key={t.to} onClick={() => navigate(t.to)}>
@@ -40,6 +68,19 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {showBirthdayPopup && (
+        <Modal title="🎉 Happy Birthday!" onClose={() => setShowBirthdayPopup(false)}
+          footer={<button className="btn btn-primary" onClick={() => setShowBirthdayPopup(false)}>Thank you!</button>}>
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <div style={{ fontSize: '2.6rem', marginBottom: 12 }}>🎂🎈🎊</div>
+            <p style={{ color: 'var(--ink)', fontSize: '1.02rem' }}>
+              Happy {birthdayToday ? 'Birthday' : 'Birthday Week'}, {firstName}!
+            </p>
+            <p className="hint-text">With appreciation, from the Media and Technology Department.</p>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

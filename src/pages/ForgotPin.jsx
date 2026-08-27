@@ -30,15 +30,15 @@ export default function ForgotPin() {
         <h2>Forgot PIN</h2>
         {sent ? (
           <>
-            <p>We've sent a reset link to the email on file for that badge number. Open it to set a new PIN.</p>
+            <p>We've sent a reset link to the email on file for that username. Open it to set a new PIN.</p>
             <Link to="/login" className="btn btn-secondary" style={{ width: '100%' }}>Back to login</Link>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
             {error && <div className="error-text">{error}</div>}
             <div className="field">
-              <label htmlFor="code">Badge number / nickname</label>
-              <input id="code" value={loginCode} onChange={e => setLoginCode(e.target.value)} required autoFocus />
+              <label htmlFor="code">Username</label>
+              <input id="code" value={loginCode} onChange={e => setLoginCode(e.target.value.toLowerCase())} autoCapitalize="none" autoCorrect="off" spellCheck={false} required autoFocus />
             </div>
             <button className="btn btn-primary" style={{ width: '100%' }} disabled={busy}>
               {busy ? 'Sending…' : 'Send reset link'}

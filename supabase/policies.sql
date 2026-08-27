@@ -10,6 +10,7 @@ alter table public.schedules          enable row level security;
 alter table public.schedule_volunteers enable row level security;
 alter table public.comms_equipment    enable row level security;
 alter table public.comms_logs         enable row level security;
+alter table public.app_settings       enable row level security;
 
 -- Helper: is the current user an admin?
 create or replace function public.is_admin()
@@ -76,3 +77,11 @@ create policy "comms_logs: self can insert own" on public.comms_logs
   for insert with check (profile_id = auth.uid());
 create policy "comms_logs: self can update own open entries" on public.comms_logs
   for update using (profile_id = auth.uid() or public.is_admin());
+
+-- ---------- app settings (branding) ----------
+-- The logo needs to render on the public login screen too, so reads
+-- are open to anyone (anon + authenticated); only admins can write.
+create policy "app_settings: anyone can read" on public.app_settings
+  for select using (true);
+create policy "app_settings: admins write" on public.app_settings
+  for all using (public.is_admin()) with check (public.is_admin());

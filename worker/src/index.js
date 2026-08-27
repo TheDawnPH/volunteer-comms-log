@@ -17,6 +17,13 @@
  * Required secrets (set with `wrangler secret put <NAME>`):
  *   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
  * Required binding (see wrangler.toml): R2 bucket as `BUCKET`.
+ * Required var (see wrangler.toml [vars]): PUBLIC_APP_URL — the
+ *   deployed frontend's origin (e.g. https://roster.pages.dev), used
+ *   as the redirect target for invite/reset emails. Without this,
+ *   Supabase falls back to the project's default Site URL, which
+ *   lands the recovery link on "/" instead of "/reset-pin" — the
+ *   volunteer ends up silently auto-logged-in on a temporary session
+ *   instead of being asked to set their PIN.
  */
 
 const CORS_HEADERS = {
@@ -63,6 +70,18 @@ function json(body, status = 200) {
     status,
     headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
   })
+}
+
+// Always send invite/reset emails to the "set your PIN" screen, never
+// to whatever the Supabase project's default Site URL happens to be.
+function resetRedirectUrl(env) {
+  const base = (env.PUBLIC_APP_URL || '').replace(/\/$/, '')
+  if (!base) {
+    // eslint-disable-next-line no-console
+    console.warn('PUBLIC_APP_URL is not set — reset/invite emails will use the Supabase project\'s default Site URL, which can silently sign new users straight into the dashboard instead of the "set your PIN" screen.')
+    return undefined
+  }
+  return `${base}/reset-pin`
 }
 
 // ---------------------------------------------------------------
@@ -139,7 +158,9 @@ async function handleServeFile(url, env) {
 async function handleCreateUser(request, env) {
   await requireAdmin(request, env)
   const body = await request.json()
-  const { full_name, nickname, date_of_birth, email, login_code, role } = body
+  const { full_name, nickname, date_of_birth, email, role } = body
+  // Usernames are always lower-case (also enforced by a DB trigger — see schema.sql).
+  const login_code = (body.login_code || '').trim().toLowerCase()
   if (!full_name || !email || !login_code || !role) return json({ error: 'Missing required fields' }, 400)
 
   // 1. Create the Supabase Auth user with a random temporary password —
@@ -171,7 +192,13 @@ async function handleCreateUser(request, env) {
   if (!profileRes.ok) return json({ error: 'Could not save profile' }, 400)
 
   // 3. Send a "set your PIN" reset-password email so they never see the temp password.
-  await fetch(`${env.SUPABASE_URL}/auth/v1/recover`, {
+  //    redirect_to MUST point at /reset-pin — otherwise Supabase's recovery
+  //    link signs the new user in and lands them on the app's default route
+  //    (the dashboard) having never set a real PIN.
+  const redirectTo = resetRedirectUrl(env)
+  const recoverUrl = new URL(`${env.SUPABASE_URL}/auth/v1/recover`)
+  if (redirectTo) recoverUrl.searchParams.set('redirect_to', redirectTo)
+  await fetch(recoverUrl, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
@@ -201,7 +228,10 @@ async function handleResetUser(request, env, id) {
   const [row] = await profileRes.json()
   if (!row) return json({ error: 'Profile not found' }, 404)
 
-  await fetch(`${env.SUPABASE_URL}/auth/v1/recover`, {
+  const redirectTo = resetRedirectUrl(env)
+  const recoverUrl = new URL(`${env.SUPABASE_URL}/auth/v1/recover`)
+  if (redirectTo) recoverUrl.searchParams.set('redirect_to', redirectTo)
+  await fetch(recoverUrl, {
     method: 'POST',
     headers: { apikey: env.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: row.email })

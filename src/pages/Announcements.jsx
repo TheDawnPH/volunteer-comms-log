@@ -3,6 +3,7 @@ import { supabase, uploadFile } from '../lib/supabaseClient.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
+import { formatManila } from '../lib/timezone.js'
 
 const empty = { id: null, title: '', description: '', image_url: '' }
 
@@ -11,6 +12,7 @@ export default function Announcements() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
+  const [viewing, setViewing] = useState(null)
   const [file, setFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -59,7 +61,7 @@ export default function Announcements() {
   return (
     <div>
       <h2>Announcements</h2>
-      <p style={{ marginBottom: 20 }}>Posts from the organizing team, newest first.</p>
+      <p style={{ marginBottom: 20 }}>Posts from the organizing team, newest first. Click a row to open it.</p>
 
       <DataTable
         title="All announcements"
@@ -72,6 +74,7 @@ export default function Announcements() {
         rows={rows}
         onAdd={isAdmin ? () => setEditing({ ...empty }) : undefined}
         addLabel="Add Announcement"
+        onRowClick={(r) => setViewing(r)}
         renderActions={isAdmin ? (r) => (
           <>
             <button className="btn btn-secondary btn-sm" onClick={() => setEditing(r)} style={{ marginRight: 8 }}>Edit</button>
@@ -79,6 +82,17 @@ export default function Announcements() {
           </>
         ) : undefined}
       />
+
+      {viewing && (
+        <Modal title={viewing.title} onClose={() => setViewing(null)}
+          footer={<button className="btn btn-secondary" onClick={() => setViewing(null)}>Close</button>}>
+          {viewing.image_url && (
+            <img src={viewing.image_url} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 12, marginBottom: 16 }} />
+          )}
+          <p style={{ whiteSpace: 'pre-wrap', color: 'var(--ink)' }}>{viewing.description || 'No description provided.'}</p>
+          <p className="hint-text" style={{ marginTop: 12 }}>Posted {formatManila(viewing.created_at)}</p>
+        </Modal>
+      )}
 
       {editing && (
         <Modal title={editing.id ? 'Edit announcement' : 'Add announcement'} onClose={() => setEditing(null)}

@@ -24,9 +24,14 @@ button, input, select, textarea{ font-family: inherit; font-size: 1rem; }
   padding: 20px 16px; display: flex; flex-direction: column; gap: 4px;
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
 }
-.sidebar-brand{ display:flex; align-items:center; gap:10px; padding: 6px 8px 18px; }
-.sidebar-brand .dot{ width: 14px; height:14px; border-radius: 50%; background: linear-gradient(135deg, var(--sage), var(--lavender)); }
+.sidebar-brand{
+  display:flex; align-items:center; gap:10px; padding: 6px 8px 18px;
+  background:none; border:none; cursor:pointer; text-align:left; width:100%; color: inherit;
+}
+.sidebar-brand .dot{ width: 14px; height:14px; border-radius: 50%; background: linear-gradient(135deg, var(--sage), var(--lavender)); flex-shrink:0; }
 .sidebar-brand h1{ font-size: 1.15rem; margin:0; }
+.brand-logo{ width: 28px; height: 28px; border-radius: 8px; object-fit: cover; flex-shrink:0; }
+.brand-logo-sm{ width: 22px; height: 22px; border-radius: 6px; }
 .nav-link{
   display:flex; align-items:center; gap:10px; padding: 10px 12px; border-radius: var(--radius-md);
   color: var(--ink-soft); text-decoration:none; font-weight: 500; font-size: .93rem; cursor:pointer; border:none; background:none; text-align:left; width:100%;
@@ -71,6 +76,10 @@ button, input, select, textarea{ font-family: inherit; font-size: 1rem; }
   box-shadow: var(--shadow-sm); transition: transform .15s ease, box-shadow .15s ease; cursor:pointer;
 }
 .tile:hover{ transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.birthday-banner{
+  display:flex; align-items:center; gap:10px; font-size:1rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--apricot) 55%, transparent), color-mix(in srgb, var(--lavender) 55%, transparent));
+}
 .tile .icon-badge{ width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
 .tile p{ margin:0; font-size:.86rem; }
 
@@ -146,12 +155,47 @@ button, input, select, textarea{ font-family: inherit; font-size: 1rem; }
 .theme-toggle button.active{ background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
 
 .hamburger-btn{ display:none; }
+.topbar-brand-mobile{
+  display:none; align-items:center; gap:8px; background:none; border:none; cursor:pointer;
+  color: var(--ink); font-family: var(--font-display); font-weight:600; font-size:1rem;
+}
+.sidebar-scrim{ display:none; }
+.sidebar-mobile-extra{ display:none; }
+.topbar-desktop-extra{ display:flex; align-items:center; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 880px){
   .hamburger-btn{ display:inline-flex; }
-  .sidebar{ position: fixed; left:0; top:0; height:100vh; transform: translateX(-100%); transition: transform .2s ease; z-index: 40; box-shadow: var(--shadow-lg); }
+  .topbar-brand-mobile{ display:flex; }
+  .sidebar{
+    position: fixed; left:0; top:0; height:100vh; width: min(280px, 82vw);
+    transform: translateX(-100%); transition: transform .2s ease; z-index: 40; box-shadow: var(--shadow-lg);
+  }
   .sidebar.open{ transform: translateX(0); }
+  .sidebar-scrim{
+    display:block; position:fixed; inset:0; background: rgba(30,28,22,.45); z-index: 39;
+    animation: scrim-fade .15s ease;
+  }
+  @keyframes scrim-fade{ from{ opacity:0; } to{ opacity:1; } }
   .content{ padding: 18px; }
-  .topbar{ padding: 14px 16px; }
+  .topbar{ padding: 12px 14px; gap: 10px; }
+  /* Theme toggle + profile pill move off the topbar into the burger menu */
+  .topbar-desktop-extra{ display:none; }
+  .sidebar-mobile-extra{
+    display:flex; flex-direction:column; gap:10px; padding: 10px 8px 16px; margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-profile{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .table-toolbar{ flex-direction: column; align-items: stretch; }
+  .table-toolbar > select, .table-toolbar > input{ width: 100%; }
+  .modal{ padding: 18px; }
+  .badge-card{ padding: 40px 20px 22px; }
+}
+
+/* ---------- Print (Volunteer Attendance export) ---------- */
+@media print{
+  .sidebar, .topbar, [data-print-hide]{ display:none !important; }
+  .app-shell{ display:block; }
+  .content{ padding:0; }
+  .card{ box-shadow:none; border:none; }
 }

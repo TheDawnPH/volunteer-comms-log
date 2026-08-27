@@ -47,9 +47,6 @@
 }
 
 /* Dark theme — same pastel hues, deepened surfaces so accents still read soft */
-:root[data-theme="dark"], @media (prefers-color-scheme: dark){
-  color-scheme: dark;
-}
 :root[data-theme="dark"]{
   color-scheme: dark;
   --bg:            #23241F;

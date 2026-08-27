@@ -6,7 +6,7 @@ import React from 'react'
  * every "List X" node in the flowchart shares this shape:
  * a toolbar (title + Add button) and rows with Edit/Delete actions.
  */
-export default function DataTable({ title, columns, rows, onAdd, addLabel = 'Add', renderActions, emptyText = 'Nothing here yet.' }) {
+export default function DataTable({ title, columns, rows, onAdd, addLabel = 'Add', renderActions, onRowClick, emptyText = 'Nothing here yet.' }) {
   return (
     <div className="card card-pad">
       <div className="table-toolbar">
@@ -26,9 +26,17 @@ export default function DataTable({ title, columns, rows, onAdd, addLabel = 'Add
               <tr><td colSpan={columns.length + (renderActions ? 1 : 0)} style={{ color: 'var(--ink-faint)', textAlign: 'center', padding: '28px 0' }}>{emptyText}</td></tr>
             )}
             {rows.map((row, i) => (
-              <tr key={row.id ?? i}>
+              <tr
+                key={row.id ?? i}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                style={onRowClick ? { cursor: 'pointer' } : undefined}
+              >
                 {columns.map(c => <td key={c.key}>{c.render ? c.render(row) : row[c.key]}</td>)}
-                {renderActions && <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{renderActions(row)}</td>}
+                {renderActions && (
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+                    {renderActions(row)}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

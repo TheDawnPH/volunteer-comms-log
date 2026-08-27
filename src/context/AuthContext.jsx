@@ -52,10 +52,11 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithPin(loginCode, pin) {
+    // Usernames are always lower-case (also enforced server-side).
     const { data: email, error: resolveErr } = await supabase.rpc('resolve_login_code', {
-      code: loginCode.trim()
+      code: loginCode.trim().toLowerCase()
     })
-    if (resolveErr || !email) throw new Error('That badge number / nickname was not found.')
+    if (resolveErr || !email) throw new Error('That username was not found.')
 
     const { error } = await supabase.auth.signInWithPassword({ email, password: pin })
     if (error) throw new Error('Incorrect PIN. Please try again.')
@@ -63,9 +64,9 @@ export function AuthProvider({ children }) {
 
   async function forgotPin(loginCode) {
     const { data: email, error: resolveErr } = await supabase.rpc('resolve_login_code', {
-      code: loginCode.trim()
+      code: loginCode.trim().toLowerCase()
     })
-    if (resolveErr || !email) throw new Error('That badge number / nickname was not found.')
+    if (resolveErr || !email) throw new Error('That username was not found.')
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-pin`
     })

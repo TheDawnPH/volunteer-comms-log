@@ -89,7 +89,7 @@ export default function PeopleManager({ role, title, addLabel }) {
         columns={[
           { key: 'full_name', label: 'Name' },
           { key: 'nickname', label: 'Nickname' },
-          { key: 'login_code', label: 'Badge / login code' },
+          { key: 'login_code', label: 'Username' },
           { key: 'date_of_birth', label: 'Date of birth' },
           { key: 'email', label: 'Email' }
         ]}
@@ -117,8 +117,10 @@ export default function PeopleManager({ role, title, addLabel }) {
               <input value={editing.full_name} onChange={e => setEditing({ ...editing, full_name: e.target.value })} required /></div>
             <div className="field"><label>Nickname</label>
               <input value={editing.nickname} onChange={e => setEditing({ ...editing, nickname: e.target.value })} /></div>
-            <div className="field"><label>Badge / login code</label>
-              <input value={editing.login_code} onChange={e => setEditing({ ...editing, login_code: e.target.value })} required disabled={!!editing.id} /></div>
+            <div className="field"><label>Username</label>
+              <input value={editing.login_code} onChange={e => setEditing({ ...editing, login_code: e.target.value.toLowerCase() })}
+                autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={!!editing.id} />
+              <p className="hint-text">Always saved lower-case.</p></div>
             <div className="field"><label>Date of birth</label>
               <input type="date" value={editing.date_of_birth || ''} onChange={e => setEditing({ ...editing, date_of_birth: e.target.value })} /></div>
             <div className="field"><label>Email</label>

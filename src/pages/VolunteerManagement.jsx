@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabaseClient.js'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
@@ -9,6 +10,9 @@ export default function VolunteerManagement() {
   const [positions, setPositions] = useState([])
   const [editingPos, setEditingPos] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [importBusy, setImportBusy] = useState(false)
+  const [importMessage, setImportMessage] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => { if (tab === 'positions') loadPositions() }, [tab])
 
@@ -32,6 +36,50 @@ export default function VolunteerManagement() {
     loadPositions()
   }
 
+  // Excel import: expects a single-column list of position names, with
+  // the first row being the "Positions List" header (skipped).
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportBusy(true); setImportMessage(null)
+    try {
+      const buffer = await file.arrayBuffer()
+      const workbook = XLSX.read(buffer, { type: 'array' })
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' })
+
+      // Skip the first row — it's the "Positions List" header/title, not a position.
+      const names = rows.slice(1)
+        .map(row => (row?.[0] ?? '').toString().trim())
+        .filter(Boolean)
+      // De-dupe within the file itself, case-insensitively.
+      const seen = new Set()
+      const uniqueNames = names.filter(n => {
+        const key = n.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key); return true
+      })
+
+      if (uniqueNames.length === 0) {
+        setImportMessage({ type: 'error', text: 'No position names found under the header row.' })
+        return
+      }
+
+      const { error } = await supabase
+        .from('positions')
+        .upsert(uniqueNames.map(name => ({ name })), { onConflict: 'name', ignoreDuplicates: true })
+      if (error) throw error
+
+      setImportMessage({ type: 'success', text: `Imported ${uniqueNames.length} position${uniqueNames.length === 1 ? '' : 's'} (existing ones were left as-is).` })
+      loadPositions()
+    } catch (err) {
+      setImportMessage({ type: 'error', text: err.message || 'Could not read that file.' })
+    } finally {
+      setImportBusy(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <div>
       <h2>Volunteer Management</h2>
@@ -44,6 +92,24 @@ export default function VolunteerManagement() {
 
       {tab === 'positions' && (
         <>
+          <div className="card card-pad" style={{ marginBottom: 20 }}>
+            <div className="table-toolbar" style={{ marginBottom: importMessage ? 12 : 0 }}>
+              <div>
+                <h3 style={{ margin: 0 }}>Import from Excel</h3>
+                <p className="hint-text" style={{ margin: '4px 0 0' }}>One position name per row, first row is the "Positions List" header (it's skipped automatically).</p>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} disabled={importBusy}>
+                {importBusy ? 'Importing…' : '⬆️ Import .xlsx'}
+              </button>
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleImportFile} />
+            </div>
+            {importMessage && (
+              <div className={importMessage.type === 'error' ? 'error-text' : 'error-text'} style={importMessage.type === 'success' ? { background: 'var(--sage)', color: 'var(--sage-ink)' } : {}}>
+                {importMessage.text}
+              </div>
+            )}
+          </div>
+
           <DataTable
             title="Positions"
             columns={[{ key: 'name', label: 'Position name' }]}

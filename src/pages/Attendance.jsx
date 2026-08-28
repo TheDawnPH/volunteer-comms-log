@@ -7,7 +7,7 @@ import { formatManila } from '../lib/timezone.js'
 export default function Attendance() {
   const [logs, setLogs] = useState([])
   const [volunteers, setVolunteers] = useState([])
-  const [volunteerId, setVolunteerId] = useState('')
+  const [volunteerId, setVolunteerId] = useState('') // '', 'guests', or a profile id
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
@@ -24,7 +24,8 @@ export default function Attendance() {
       .select('*, profiles(full_name, nickname), comms_equipment(name)')
       .order('time_in', { ascending: false })
 
-    if (volunteerId) query = query.eq('profile_id', volunteerId)
+    if (volunteerId === 'guests') query = query.is('profile_id', null)
+    else if (volunteerId) query = query.eq('profile_id', volunteerId)
     if (from) query = query.gte('time_in', new Date(from).toISOString())
     if (to) query = query.lte('time_in', new Date(to + 'T23:59:59').toISOString())
 
@@ -34,7 +35,8 @@ export default function Attendance() {
 
   function rowsForExport() {
     return logs.map(r => ({
-      Volunteer: r.profiles?.nickname || r.profiles?.full_name || '—',
+      Name: r.profiles?.nickname || r.profiles?.full_name || r.guest_name || '—',
+      Type: r.profile_id ? 'Volunteer/Staff' : 'Guest',
       Headset: r.comms_equipment?.name || '—',
       'Time IN': formatManila(r.time_in),
       'Time OUT': r.time_out ? formatManila(r.time_out) : '—',
@@ -63,7 +65,8 @@ export default function Attendance() {
       <div className="card card-pad" style={{ marginBottom: 20 }} data-print-hide>
         <div className="table-toolbar" style={{ marginBottom: 0 }}>
           <select value={volunteerId} onChange={e => setVolunteerId(e.target.value)} style={{ minWidth: 180 }}>
-            <option value="">All volunteers</option>
+            <option value="">All (volunteers + guests)</option>
+            <option value="guests">Guests only</option>
             {volunteers.map(v => <option key={v.id} value={v.id}>{v.nickname || v.full_name}</option>)}
           </select>
           <input type="date" value={from} onChange={e => setFrom(e.target.value)} />
@@ -79,7 +82,8 @@ export default function Attendance() {
         <DataTable
           title={`Log entries (${logs.length})`}
           columns={[
-            { key: 'name', label: 'Volunteer', render: r => r.profiles?.nickname || r.profiles?.full_name },
+            { key: 'name', label: 'Name', render: r => r.profiles?.nickname || r.profiles?.full_name || r.guest_name },
+            { key: 'type', label: 'Type', render: r => r.profile_id ? <span className="tag tag-in">Volunteer/Staff</span> : <span className="tag tag-locked">Guest</span> },
             { key: 'headset', label: 'Headset', render: r => r.comms_equipment?.name },
             { key: 'time_in', label: 'Time IN', render: r => formatManila(r.time_in) },
             { key: 'time_out', label: 'Time OUT', render: r => r.time_out ? formatManila(r.time_out) : '—' },

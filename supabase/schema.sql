@@ -88,14 +88,35 @@ create table if not exists public.comms_equipment (
 -- on "Time OUT" (headset released). `locked` mirrors "Lock Headset in
 -- use entry" while a volunteer is actively signed on; volunteer
 -- attendance is simply "distinct time-in rows per profile per day".
+--
+-- A row belongs to EITHER a registered profile OR a guest (someone not
+-- in the system) — never both, never neither. Guest entries are only
+-- ever created by an admin (guest_created_by), from the admin side of
+-- Comms Equipment, since a guest has no login of their own.
 create table if not exists public.comms_logs (
-  id            uuid primary key default gen_random_uuid(),
-  equipment_id  uuid not null references public.comms_equipment(id),
-  profile_id    uuid not null references public.profiles(id),
-  time_in       timestamptz not null default now(),
-  time_out      timestamptz,
-  status        text not null check (status in ('in','out')) default 'in',
-  created_at    timestamptz not null default now()
+  id                uuid primary key default gen_random_uuid(),
+  equipment_id      uuid not null references public.comms_equipment(id),
+  profile_id        uuid references public.profiles(id),
+  guest_name        text,
+  guest_created_by  uuid references public.profiles(id),
+  time_in           timestamptz not null default now(),
+  time_out          timestamptz,
+  status            text not null check (status in ('in','out')) default 'in',
+  created_at        timestamptz not null default now(),
+  constraint comms_logs_identity_xor check (
+    (profile_id is not null and guest_name is null) or
+    (profile_id is null and guest_name is not null)
+  )
+);
+
+-- Upgrading an existing database that predates guest comms logins:
+alter table public.comms_logs alter column profile_id drop not null;
+alter table public.comms_logs add column if not exists guest_name text;
+alter table public.comms_logs add column if not exists guest_created_by uuid references public.profiles(id);
+alter table public.comms_logs drop constraint if exists comms_logs_identity_xor;
+alter table public.comms_logs add constraint comms_logs_identity_xor check (
+  (profile_id is not null and guest_name is null) or
+  (profile_id is null and guest_name is not null)
 );
 
 -- ---------- app settings (branding) ----------

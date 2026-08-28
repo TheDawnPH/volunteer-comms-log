@@ -68,13 +68,17 @@ create policy "comms_equipment: admins write" on public.comms_equipment
 -- ---------- comms logs ----------
 -- Any signed-in volunteer can open/close their OWN log entries
 -- (Comms Login/Logout flow); admins can read every entry for the
--- Volunteer Attendance report.
+-- Volunteer Attendance report, and are the only ones who can create
+-- or update GUEST entries (profile_id is null), since a guest has no
+-- Supabase Auth session of their own to satisfy auth.uid() checks.
 create policy "comms_logs: self can read own" on public.comms_logs
   for select using (profile_id = auth.uid());
 create policy "comms_logs: admins can read all" on public.comms_logs
   for select using (public.is_admin());
 create policy "comms_logs: self can insert own" on public.comms_logs
   for insert with check (profile_id = auth.uid());
+create policy "comms_logs: admins can insert any (incl. guest)" on public.comms_logs
+  for insert with check (public.is_admin());
 create policy "comms_logs: self can update own open entries" on public.comms_logs
   for update using (profile_id = auth.uid() or public.is_admin());
 

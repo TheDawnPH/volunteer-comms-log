@@ -3,6 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabaseClient.js'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
+import GuestCommsLogin from '../components/GuestCommsLogin.jsx'
 
 const empty = { id: null, name: '', qr_value: '' }
 
@@ -55,6 +56,8 @@ export default function CommsEquipment() {
     <div>
       <h2>Comms Equipment List</h2>
       <p style={{ marginBottom: 20 }}>Each headset gets a unique QR code volunteers scan (with their phone camera) to time in/out.</p>
+
+      <GuestCommsLogin />
 
       <DataTable
         title="Headsets"

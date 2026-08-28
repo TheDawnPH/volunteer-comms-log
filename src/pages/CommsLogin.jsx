@@ -4,20 +4,19 @@ import { useAuth } from '../context/AuthContext.jsx'
 import DataTable from '../components/DataTable.jsx'
 import QrScanner from '../components/QrScanner.jsx'
 import { formatManila } from '../lib/timezone.js'
+import { lookupEquipment, toggleCommsLog } from '../lib/commsLogin.js'
 
 /*
- * Mirrors "Comms Login/Logout" in the flowchart:
+ * Mirrors "Comms Login/Logout" in the flowchart, for a signed-in
+ * volunteer/admin acting for THEMSELVES. (Admins logging in a guest
+ * who isn't in the system use the "Guest Comms Login" panel on the
+ * Comms Equipment page instead — see GuestCommsLogin.jsx.)
  *  1. Scan the QR code from a comms headset with the phone camera, or
  *     — if the camera isn't available — type the headset's QR value
  *     OR its plain name (whichever is easier to read off the unit).
- *  2. Is timed IN? -> look for an OPEN log row (status='in') for this
- *     volunteer+headset.
- *     - true  -> Time OUT: close that row, set status='out',
- *                Release Headset (equipment.status='available').
- *     - false -> Is the headset NOT used by another volunteer?
- *         - true  -> Time IN: create a new open row,
- *                    Lock Headset (equipment.status='in_use').
- *         - false -> Throw Error: headset is used by another volunteer.
+ *  2. Is timed IN? -> Time OUT + Release Headset.
+ *     Otherwise, is the headset free? -> Time IN + Lock Headset.
+ *     Otherwise -> Error: used by someone else.
  */
 export default function CommsLogin() {
   const { profile } = useAuth()
@@ -39,51 +38,15 @@ export default function CommsLogin() {
     setMyLogs(data || [])
   }
 
-  async function lookupEquipment(rawValue) {
-    const value = rawValue.trim()
-    if (!value) throw new Error('Enter or scan a headset QR value or name.')
-
-    // Try an exact QR-value match first (what the camera decodes), then
-    // fall back to a case-insensitive name match for manual entry.
-    const { data: byQr } = await supabase.from('comms_equipment').select('*').eq('qr_value', value).maybeSingle()
-    if (byQr) return byQr
-
-    const { data: byName } = await supabase.from('comms_equipment').select('*').ilike('name', value).maybeSingle()
-    if (byName) return byName
-
-    throw new Error('Unrecognized QR code / headset name.')
-  }
-
   async function processScan(rawValue) {
     if (busy) return
     setBusy(true); setMessage(null)
     try {
-      const equipment = await lookupEquipment(rawValue)
-
-      // Is this volunteer already timed in on this headset?
-      const { data: myOpen } = await supabase
-        .from('comms_logs').select('*')
-        .eq('equipment_id', equipment.id).eq('profile_id', profile.id).eq('status', 'in')
-        .maybeSingle()
-
-      if (myOpen) {
-        // TIME OUT — release the headset
-        await supabase.from('comms_logs').update({ time_out: new Date().toISOString(), status: 'out' }).eq('id', myOpen.id)
-        await supabase.from('comms_equipment').update({ status: 'available' }).eq('id', equipment.id)
-        setMessage({ type: 'success', text: `Timed OUT of ${equipment.name}. Headset released.` })
-      } else {
-        // Is the headset NOT used by another volunteer?
-        const { data: otherOpen } = await supabase
-          .from('comms_logs').select('*').eq('equipment_id', equipment.id).eq('status', 'in').maybeSingle()
-
-        if (otherOpen) {
-          throw new Error(`Headset is used by another volunteer. Ask them to time out first.`)
-        }
-        // TIME IN — lock the headset
-        await supabase.from('comms_logs').insert({ equipment_id: equipment.id, profile_id: profile.id, status: 'in' })
-        await supabase.from('comms_equipment').update({ status: 'in_use' }).eq('id', equipment.id)
-        setMessage({ type: 'success', text: `Timed IN on ${equipment.name}. Headset locked to you.` })
-      }
+      const equipment = await lookupEquipment(supabase, rawValue)
+      const { action } = await toggleCommsLog(supabase, equipment, { type: 'profile', profileId: profile.id })
+      setMessage(action === 'out'
+        ? { type: 'success', text: `Timed OUT of ${equipment.name}. Headset released.` }
+        : { type: 'success', text: `Timed IN on ${equipment.name}. Headset locked to you.` })
       setManualValue('')
       loadMyLogs()
     } catch (err) {

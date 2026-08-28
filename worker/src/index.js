@@ -27,7 +27,7 @@
  */
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*', // tighten to your Pages domain in production
+  'Access-Control-Allow-Origin': 'volunteer-system-clf.pages.dev', // tighten to your Pages domain in production
   'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 }

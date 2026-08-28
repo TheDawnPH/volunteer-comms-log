@@ -18,5 +18,5 @@ bucket_name = "volunteer-system-files"
 #   R2_PUBLIC_BASE_URL is optional, only if you attach a custom/public
 #   domain to the bucket.
 [vars]
-PUBLIC_APP_URL = "https://YOUR-DEPLOYED-FRONTEND.example.com"
-# R2_PUBLIC_BASE_URL = "https://cdn.yourdomain.com"
+PUBLIC_APP_URL = "https://volunteer-system-clf.pages.dev"
+R2_PUBLIC_BASE_URL = "https://cf-cdn.thedawnph.net"

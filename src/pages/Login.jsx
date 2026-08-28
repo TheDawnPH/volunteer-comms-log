@@ -35,7 +35,6 @@ export default function Login() {
       <div className="badge-card">
         <div className="badge-strap" />
         <span className="badge-role-pill">{mode === 'admin' ? 'Administrator' : 'Volunteer'}</span>
-        <h2 style={{ marginBottom: 4 }}>Roster</h2>
         <p style={{ marginBottom: 20 }}>Sign in with your username and PIN.</p>
 
         <div className="theme-toggle" style={{ display: 'inline-flex', marginBottom: 20 }}>
